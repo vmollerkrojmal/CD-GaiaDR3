@@ -12,7 +12,7 @@ INPUT_FILE = "../../data/processed/cd_small.fits"
 OUTPUT_DIR = "../../data/gaia_bins"
 
 N_BINS = 40
-RADIUS_DEG = 120 / 3600
+RADIUS_DEG = 90 / 3600
 MAG_LIMIT = 15
 
 SLEEP_BETWEEN_QUERIES = 15
@@ -72,7 +72,8 @@ for i in range(N_BINS):
 
         g.source_id,
         g.ra, g.dec,
-        g.pmra, g.pmdec,
+        g.pmra, g.pmra_error,
+        g.pmdec, g.pmdec_error,
         g.phot_g_mean_mag,
         g.phot_bp_mean_mag,
         g.phot_rp_mean_mag,

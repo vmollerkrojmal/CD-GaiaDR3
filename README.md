@@ -129,12 +129,12 @@ Ejemplo de contenido del archivo `.env`:
 #### Parámetros utilizados
 
 - número de bins en declinación: 40  
-- radio de búsqueda: 120 arcsec  
+- radio de búsqueda: 90 arcsec  
 - límite de magnitud: G < 15  
 
 El rango de declinación se divide en 40 intervalos para evitar queries excesivamente pesadas, mejorar la estabilidad del servidor y facilitar la ejecución secuencial. 
 
-El catálogo CD presenta errores posicionales del orden de 20–30 arcsec, por lo que se adopta un radio de 120 arcsec
+El catálogo CD presenta errores posicionales del orden de 20–30 arcsec, por lo que se adopta un radio de 90 arcsec
 con el objetivo de construir un crossmatch amplio, que evite perder candidatos verdaderos.
 
 
