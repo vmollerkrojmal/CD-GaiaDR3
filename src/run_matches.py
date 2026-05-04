@@ -4,9 +4,11 @@ from process_data.magnitudes  import add_estimated_cd_magnitude
 from process_data.propagation import propagate_gaia_coords
 from matching.match import positional_match
 from matching.filter import apply_magnitude_filter
+from analysis.metrics import compute_metrics, print_summary_table, metrics_to_table
+from analysis.plots import plot_separation_distributions, plot_quality_metrics, plot_pm_effect, plot_summary_table
 from src.utils.logger import get_logger
 
-import os
+from pathlib import Path
 
 logger = get_logger("run_matches")
 
@@ -20,6 +22,9 @@ def main():
         - Procesamiento de los catálogos de entrada
         - Crossmatch
         - Filtrado
+        - Crossmatch
+        - Cálculo de métricas del resultado
+        - Generación y guardado de tablas y plots del resultado
 
     PRECONDICIÓN:
 
@@ -33,7 +38,7 @@ def main():
     ../src/obtain_data/gaia_crossmatch.py
     ../src/obtain_data/merge_gaia_bins.py
     """
-    # Cargar
+    # Cargar tablas
     cd = Table.read("../data/processed/cd_catalog_icrs_full.fits")
     gaia = Table.read("../data/processed/gaia_merge.fits")
 
@@ -42,7 +47,7 @@ def main():
     cd_mag.rename_column('mag', 'cd_mag')
     gaia = join(gaia, cd_mag, keys='cd_id', join_type='left')
 
-    # Preprocesar
+    # Preprocesar Gaia
     gaia = add_estimated_cd_magnitude(gaia)
     gaia = propagate_gaia_coords(gaia)
 
@@ -61,14 +66,63 @@ def main():
     match4 = apply_magnitude_filter(match3, DELTA_MAG,
                                     label="4 — posición + magnitud con propagación")
 
-    # Guardar
-    os.makedirs("../data/matches", exist_ok=True)
+    # Guardar matches
+    matches_dir = Path("../data/matches")
+    matches_dir.mkdir(parents=True, exist_ok=True)
+
     for name, table in [("match1", match1), ("match2", match2),
-                         ("match3", match3), ("match4", match4)]:
-        path = f"../data/matches/{name}.fits"
-        table.write(path, overwrite=True)
+                        ("match3", match3), ("match4", match4)]:
+        path = matches_dir / f"{name}.fits"
+        table.write(str(path), overwrite=True)
         logger.info(f"Guardado {path} ({len(table)} filas)")
 
+    # Calcular métricas
+    matches = {
+        "1: pos. sin pm": match1,
+        "2: pos.+mag sin pm": match2,
+        "3: pos. con pm": match3,
+        "4: pos.+mag con pm": match4,
+    }
+
+    metrics_list = [compute_metrics(t, gaia, l) for l, t in matches.items()]
+
+    # Guardar CSV de tabla de métricas
+    results_dir = Path("results")
+    results_dir.mkdir(exist_ok=True)
+    metrics_table = metrics_to_table(metrics_list)
+    metrics_table.write(results_dir / "metrics.csv", format='csv', overwrite=True)
+
+    # Guardar imagen de tabla de métricas
+    fig_table = plot_summary_table(metrics_list)
+    fig_table.savefig(results_dir / "metrics_table.png", dpi=150, bbox_inches='tight')
+
+    # Print en consola de tabla de métricas
+    print_summary_table(metrics_list)
+
+    # Generar y guardar plots
+    fig1 = plot_separation_distributions(matches)
+    fig1.savefig(results_dir / "separation_distributions.png", dpi=150)
+
+    fig2 = plot_quality_metrics(matches, gaia)
+    fig2.savefig(results_dir / "quality_metrics.png", dpi=150)
+
+    # Plot de efecto de pm sin filtro de magnitud (match1 vs match3)
+    fig_pm_1_3 = plot_pm_effect(
+        match1, match3,
+        label_no_pm="pos. sin pm",
+        label_with_pm="pos. con pm",
+        pm_threshold_mas=50
+    )
+    fig_pm_1_3.savefig(results_dir / "pm_effect_1_3.png", dpi=150)
+
+    # Plot de efecto de pm con filtro de magnitud (match2 vs match4)
+    fig_pm_2_4 = plot_pm_effect(
+        match2, match4,
+        label_no_pm="pos.+mag sin pm",
+        label_with_pm="pos.+mag con pm",
+        pm_threshold_mas=50
+    )
+    fig_pm_2_4.savefig(results_dir / "pm_effect_2_4.png", dpi=150)
 
 if __name__ == "__main__":
     main()
