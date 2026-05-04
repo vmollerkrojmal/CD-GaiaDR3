@@ -27,6 +27,7 @@ El enfoque consiste en construir un pipeline reproducible que permita:
             cd_catalog.py
             process_cd_catalog.py
             gaia_crossmatch.py
+            merge_gaia_bins.py
         utils/
             logger.py   # logger de mensajes en consola
          
@@ -73,6 +74,13 @@ En las magnitudes se detectaron valores extremos (hasta magnitud 50), que corres
 
 ## Pipeline de obtención de datos
 
+Los catálogos pueden obtenerse a través de distintos servicios, por lo cual la obtención de datos no se incluye como parte del pipeline principal.
+Para realizar la obtención de los catálogos por este medio, el orden de ejecución es:
+1. src/obtain_data/cd_catalog.py
+2. src/obtain_data/process_cd_catalog.py
+3. src/obtain_data/gaia_crossmatch.py
+4. src/obtain_data/merge_gaia_bins.py
+
 ### 1. Descarga del catálogo CD
 
 Script:
@@ -108,8 +116,6 @@ Script:
 
     src/obtain_data/gaia_crossmatch.py
 
-#### Autenticación
-
 Requiere un archivo `.env` con usuario y password del archivo de Gaia.
 
 Ejemplo de contenido del archivo `.env`:
@@ -117,16 +123,14 @@ Ejemplo de contenido del archivo `.env`:
     GAIA_USER=...
     GAIA_PASSWORD=...
 
+Procedimiento:
+
+- login en el archivo Gaia
+- subida del catálogo CD (`ra`, `dec`) como tabla
+- ejecución de queries en bins de declinación  
 
 
-#### Procedimiento
-
-1. login en el archivo Gaia  
-2. subida del catálogo CD (`ra`, `dec`) como tabla  
-3. ejecución de queries en bins de declinación  
-
-
-#### Parámetros utilizados
+Parámetros utilizados:
 
 - número de bins en declinación: 40  
 - radio de búsqueda: 90 arcsec  
@@ -143,9 +147,7 @@ Considerando que Gaia DR3 alcanza aproximadamente G ≈ 20–21, este filtro red
 
 En esta etapa no se busca una identificación definitiva, sino generar un conjunto de candidatos para análisis posterior.
 
-
-
-#### Output
+Output:
 
 Cada bin genera un archivo:
 
@@ -153,17 +155,18 @@ Cada bin genera un archivo:
 
 que contiene fuentes de Gaia dentro del radio de búsqueda con parámetros astrométricos y fotométricos y separación angular respecto a la posición del catálogo CD.
 
+### 3. Merge de los bins de Gaia
+
+Script:
+
+    src/obtain_data/merge_gaia_bins.py
+
+Realiza un merge de los bins de Gaia para obtener el crossmatch amplio inicial completo.
+
 ---
 
-## Enfoque metodológico
+## Exploración del match amplio para la estimación de la tolerancia
 
-El pipeline está diseñado en etapas:
+---
 
-1. Crossmatch amplio  
-   Generación de candidatos con criterios poco restrictivos  
-
-2. Filtrado posterior  
-   Reducción de falsos positivos mediante criterios adicionales  
-
-3. Análisis estadístico  
-   Evaluación de la calidad del match y de los posibles sesgos.
+## Pipeline principal y funciones auxiliares
