@@ -3,17 +3,13 @@ import matplotlib.pyplot as plt
 from src.analysis.metrics import compute_metrics
 
 
-def plot_separation_distributions(matches_dict, bins=80):
-    """
-    Compara las distribuciones de separación angular para los matches
-    en dos paneles: todos los pares, y solo los pares únicos.
-    """
+def plot_separation_distributions(matches_dict, bins=80, param_label=""):
     colors = ['steelblue', 'darkorange', 'seagreen', 'crimson']
     labels = list(matches_dict.keys())
     tables = list(matches_dict.values())
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    fig.suptitle('Distribución de separaciones angulares por match', fontsize=13)
+    fig.suptitle(f'Distribución de separaciones angulares por match\n{param_label}', fontsize=13)
 
     for table, label, color in zip(tables, labels, colors):
         if table is None or len(table) == 0:
@@ -44,11 +40,7 @@ def plot_separation_distributions(matches_dict, bins=80):
     return fig
 
 
-def plot_quality_metrics(matches_dict, gaia):
-    """
-    Muestra cobertura, fracción de únicos y fracción de ambiguos
-    para cada match en un gráfico de barras agrupadas.
-    """
+def plot_quality_metrics(matches_dict, gaia, param_label=""):
     labels = list(matches_dict.keys())
     metrics = [compute_metrics(t, gaia, l)
                for l, t in matches_dict.items()]
@@ -68,7 +60,7 @@ def plot_quality_metrics(matches_dict, gaia):
     ax.set_xticklabels(labels, rotation=15, ha='right', fontsize=9)
     ax.set_ylabel('Fracción')
     ax.set_ylim(0, 1.05)
-    ax.set_title('Métricas de calidad por match')
+    ax.set_title(f'Métricas de calidad por match\n{param_label}')
     ax.legend()
     ax.grid(True, axis='y', alpha=0.3)
 
@@ -79,11 +71,7 @@ def plot_quality_metrics(matches_dict, gaia):
 def plot_pm_effect(match_no_pm, match_with_pm,
                    label_no_pm="sin propagar",
                    label_with_pm="con propagación",
-                   pm_threshold_mas=50, bins=60):
-    """
-    Compara las separaciones angulares entre dos matches separando
-    las estrellas según su módulo de movimiento propio.
-    """
+                   pm_threshold_mas=50, bins=60, param_label=""):
     def add_pm_total(pairs):
         pmra  = np.array(pairs['pmra'],  dtype=float)
         pmdec = np.array(pairs['pmdec'], dtype=float)
@@ -100,7 +88,7 @@ def plot_pm_effect(match_no_pm, match_with_pm,
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     fig.suptitle(f'Efecto de la propagación según pm total '
-                 f'(umbral = {pm_threshold_mas} mas/año)', fontsize=13)
+                 f'(umbral = {pm_threshold_mas} mas/año)\n{param_label}', fontsize=13)
 
     for ax, mask_no_pm, mask_with_pm, titulo in zip(
         axes,
@@ -172,12 +160,10 @@ def plot_summary_table(metrics_list):
     legend = "\n".join(legend_lines)
     n_legend_lines = len(legend_lines)
 
-    # Altura proporcional: filas de tabla + líneas de leyenda
     fig_height = 0.5 * (n_rows + 1) + 0.22 * n_legend_lines + 0.5
     fig, ax = plt.subplots(figsize=(13, fig_height))
     ax.axis('off')
 
-    # La tabla ocupa la parte superior, dejando espacio para la leyenda abajo
     legend_fraction = (0.22 * n_legend_lines) / fig_height
     table_bottom    = legend_fraction + 0.05
 
@@ -192,7 +178,6 @@ def plot_summary_table(metrics_list):
     t.set_fontsize(10)
     t.auto_set_column_width(col=list(range(n_cols)))
 
-    # Altura de las filas
     for (row, col), cell in t.get_celld().items():
         cell.set_height(0.08)
 

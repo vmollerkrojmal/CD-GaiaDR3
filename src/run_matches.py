@@ -13,7 +13,7 @@ from pathlib import Path
 logger = get_logger("run_matches")
 
 # Parámetros utilizados
-TOLERANCE = 30.0
+TOLERANCE = 46.0
 DELTA_MAG = 1.5
 
 def main():
@@ -51,6 +51,8 @@ def main():
     gaia = add_estimated_cd_magnitude(gaia)
     gaia = propagate_gaia_coords(gaia)
 
+    param_label = f'r = {TOLERANCE:.0f}"  —  Δmag = {DELTA_MAG}'
+
     # Matches
     match1 = positional_match(gaia, TOLERANCE,
                               col_ra_gaia='ra', col_dec_gaia='dec',
@@ -87,42 +89,43 @@ def main():
     metrics_list = [compute_metrics(t, gaia, l) for l, t in matches.items()]
 
     # Guardar CSV de tabla de métricas
-    results_dir = Path("results")
+    results_dir = Path("../results")
     results_dir.mkdir(exist_ok=True)
     metrics_table = metrics_to_table(metrics_list)
-    metrics_table.write(results_dir / "metrics.csv", format='csv', overwrite=True)
+    metrics_table.write(results_dir / f"metrics_r{TOLERANCE:.0f}_dm{DELTA_MAG}.csv", format='csv', overwrite=True)
 
     # Guardar imagen de tabla de métricas
     fig_table = plot_summary_table(metrics_list)
-    fig_table.savefig(results_dir / "metrics_table.png", dpi=150, bbox_inches='tight')
+    fig_table.suptitle(param_label, fontsize=11, color='gray', y=1.01)
+    fig_table.savefig(results_dir / f"metrics_table_r{TOLERANCE:.0f}_dm{DELTA_MAG}.png", dpi=150, bbox_inches='tight')
 
     # Print en consola de tabla de métricas
     print_summary_table(metrics_list)
 
     # Generar y guardar plots
-    fig1 = plot_separation_distributions(matches)
-    fig1.savefig(results_dir / "separation_distributions.png", dpi=150)
+    fig1 = plot_separation_distributions(matches, param_label=param_label)
+    fig1.savefig(results_dir / f"separation_distributions_r{TOLERANCE:.0f}_dm{DELTA_MAG}.png", dpi=150)
 
-    fig2 = plot_quality_metrics(matches, gaia)
-    fig2.savefig(results_dir / "quality_metrics.png", dpi=150)
+    fig2 = plot_quality_metrics(matches, gaia, param_label=param_label)
+    fig2.savefig(results_dir / f"quality_metrics_r{TOLERANCE:.0f}_dm{DELTA_MAG}.png", dpi=150)
 
-    # Plot de efecto de pm sin filtro de magnitud (match1 vs match3)
     fig_pm_1_3 = plot_pm_effect(
         match1, match3,
         label_no_pm="pos. sin pm",
         label_with_pm="pos. con pm",
-        pm_threshold_mas=50
+        pm_threshold_mas=50,
+        param_label=param_label
     )
-    fig_pm_1_3.savefig(results_dir / "pm_effect_1_3.png", dpi=150)
+    fig_pm_1_3.savefig(results_dir / f"pm_effect_1_3_r{TOLERANCE:.0f}_dm{DELTA_MAG}.png", dpi=150)
 
-    # Plot de efecto de pm con filtro de magnitud (match2 vs match4)
     fig_pm_2_4 = plot_pm_effect(
         match2, match4,
         label_no_pm="pos.+mag sin pm",
         label_with_pm="pos.+mag con pm",
-        pm_threshold_mas=50
+        pm_threshold_mas=50,
+        param_label=param_label
     )
-    fig_pm_2_4.savefig(results_dir / "pm_effect_2_4.png", dpi=150)
+    fig_pm_2_4.savefig(results_dir / f"pm_effect_2_4_r{TOLERANCE:.0f}_dm{DELTA_MAG}.png", dpi=150)
 
 if __name__ == "__main__":
     main()
