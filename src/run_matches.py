@@ -13,7 +13,7 @@ from pathlib import Path
 logger = get_logger("run_matches")
 
 # Parámetros utilizados
-TOLERANCE = 46.0
+TOLERANCE = 30.0
 DELTA_MAG = 1.5
 
 def main():
