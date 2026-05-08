@@ -304,3 +304,10 @@ Contiene funciones de visualización:
 - `plot_pm_effect`: compara las distribuciones de separación angular entre dos matches separando las estrellas según su módulo de movimiento propio total. Permite evaluar si la propagación tiene un efecto diferencial sobre estrellas de alto movimiento propio. Se usa dos veces:
   - comparando match 1 vs. match 3 (sin filtro de magnitud)
   - comparando match 2 vs. match 4 (con filtro de magnitud)
+
+
+---
+
+## Análisis de resultados
+
+Los resultados obtenidos (métricas de los matches) son analizados en `results/results.md`
